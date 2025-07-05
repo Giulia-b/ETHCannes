@@ -12,7 +12,7 @@ access(all) contract NumeroGioco {
 
     access(all) var giocate: [Giocata]
     access(all) var giocoChiuso: Bool
-    access(all) var vincitore: Address?
+    access(all) var vincitore: Int?
 
     init() {
         self.giocate = []
@@ -35,7 +35,7 @@ access(all) contract NumeroGioco {
         self.giocate.append(giocata)
     }
 
-    access(all) fun chiudiGioco(): Address {
+    access(all) fun chiudiGioco(): Giocata {
         pre {
             !self.giocoChiuso: "Già chiuso"
             self.giocate.length > 0: "Nessuna giocata"
@@ -52,26 +52,30 @@ access(all) contract NumeroGioco {
         let media = totale / self.giocate.length
         let target = media / 2
 
-        var vincitore: Address = self.giocate[0].address
+        var vincitore: Int = 0
         var minDiff = self.abs(x: self.giocate[0].numero - target)
 
-        for giocata in self.giocate {
+        for indice, giocata in self.giocate {
             let diff = self.abs(x: giocata.numero - target)
             if diff < minDiff {
                 minDiff = diff
-                vincitore = giocata.address
+                vincitore = indice
             }
         }
 
         self.vincitore = vincitore
-        return vincitore
+        return self.giocate[vincitore]
     }
 
     access(all) fun getGiocate(): [Giocata] {
         return self.giocate
     }
 
-    access(all) fun getVincitore(): Address? {
-        return self.vincitore
-    }
+    access(all) fun getVincitore(): Giocata? {
+	    if let index = self.vincitore {
+			return self.giocate[index]
+		} else {
+			return nil
+		}
+	}
 }
