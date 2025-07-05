@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Amministratore - Chiudi Gioco</title>
+  <!-- this version is bugged -->
+  <script src="https://unpkg.com/@onflow/fcl@1.19.0/dist/fcl.umd.min.js"></script>
+</head>
+<body>
+  <h1>Amministratore - Chiudi Gioco</h1>
+  <div>Chiudi il gioco per impedire alle persone di inserire nuovi numeri. Per sapere il numero vincente e la persona che l'ha inserito, clicca "Mostra vincitore"</div>
+  <button onclick="chiudiGioco()">Chiudi Gioco</button>
+  <button onclick="getVincitore()">Mostra Vincitore</button>
+  <div id="admin-result"></div>
+
+  <script>
+    fcl.config()
+      .put("accessNode.api", "http://127.0.0.1:8888") // "https://rest-testnet.onflow.org")
+      .put("discovery.wallet", "http://localhost:8701/fcl/authn"); // "https://fcl-discovery.onflow.org/testnet/authn");
+
+    async function chiudiGioco() {
+      try {
+        const txId = await fcl.mutate({
+          cadence: `
+            import NumeroGioco from 0xf8d6e0586b0a20c7
+
+            transaction {
+              prepare(signer: auth(BorrowValue) &Account) {
+                let vincitore = NumeroGioco.chiudiGioco()
+                log(vincitore)
+              }
+            }
+          `,
+          proposer: fcl.currentUser,
+          payer: fcl.currentUser,
+          authorizations: [fcl.currentUser.authorization],
+          limit: 50
+        });
+
+        document.getElementById('admin-result').innerText = "Transazione inviata! ID: " + txId;
+        await fcl.tx(txId).onceSealed();
+        document.getElementById('admin-result').innerText = "Gioco chiuso!";
+      } catch (e) {
+        document.getElementById('admin-result').innerText = "Errore: " + e.message;
+      }
+    }
+
+    async function getVincitore() {
+      try {
+        const result = await fcl.query({
+          cadence: `
+            import NumeroGioco from 0xf8d6e0586b0a20c7
+
+            access(all) fun main(): NumeroGioco.Giocata? {
+              return NumeroGioco.getVincitore()
+            }
+          `
+        });
+        document.getElementById('admin-result').innerText = "Vincitore: " + JSON.stringify(result);
+      } catch (e) {
+        document.getElementById('admin-result').innerText = "Errore: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

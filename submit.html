@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Partecipa al Gioco</title>
+  <!-- this version is bugged -->
+  <script src="https://unpkg.com/@onflow/fcl@1.19.0/dist/fcl.umd.min.js"></script>
+</head>
+<body>
+  <h1>Partecipa al Gioco</h1>
+  <div>Scrivi un numero da 1 a 100. Per vincere devi essere il più vicino alla metà della media dei numeri scritti da tutti gli altri.
+	</div>
+  <input type="number" id="numero" placeholder="Inserisci un numero" />
+  <button onclick="partecipa()">Invia</button>
+  <div id="result"></div>
+
+  <script>
+    fcl.config()
+      .put("accessNode.api", "http://127.0.0.1:8888") // "https://rest-testnet.onflow.org")
+      .put("discovery.wallet", "http://localhost:8701/fcl/authn"); // "https://fcl-discovery.onflow.org/testnet/authn");
+
+    async function partecipa() {
+      const numero = parseInt(document.getElementById('numero').value, 10);
+      if (isNaN(numero)) {
+        document.getElementById('result').innerText = "Inserisci un numero valido!";
+        return;
+      }
+
+      try {
+        const txId = await fcl.mutate({
+          cadence: `
+            import NumeroGioco from 0xf8d6e0586b0a20c7
+
+            transaction(numero: Int) {
+              prepare(signer: auth(BorrowValue) &Account) {
+                NumeroGioco.partecipa(address: signer.address, numero: numero)
+              }
+            }
+          `,
+          args: (arg, t) => [arg(numero, t.Int)],
+          proposer: fcl.currentUser,
+          payer: fcl.currentUser,
+          authorizations: [fcl.currentUser.authorization],
+          limit: 50
+        });
+
+        document.getElementById('result').innerText = "Transazione inviata! ID: " + txId;
+        await fcl.tx(txId).onceSealed();
+        document.getElementById('result').innerText = "Transazione completata!";
+      } catch (e) {
+        document.getElementById('result').innerText = "Errore: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>
