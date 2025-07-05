@@ -1,18 +1,15 @@
 {
   "accounts": {
     "emulator-account": {
-      "address": "0xf8d6e0586b0a20c7",
-      "key": "test"
+      "address": "f8d6e0586b0a20c7",
+      "key": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111"
     }
   },
   "contracts": {
     "NumeroGioco": "cadence/contracts/NumeroGioco.cdc"
   },
   "networks": {
-    "emulator": {
-      "host": "127.0.0.1:3569",
-      "chain": "flow-emulator"
-    }
+    "emulator": "127.0.0.1:3569"
   },
   "deployments": {
     "emulator": {
